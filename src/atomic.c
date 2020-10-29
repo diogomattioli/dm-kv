@@ -2,7 +2,7 @@
 
 #include "atomic.h"
 
-struct _atomic
+struct atomic_t
 {
     pthread_cond_t cond;
     pthread_mutex_t mutex;
@@ -39,52 +39,52 @@ uint32_t atomic_get(pthread_mutex_t *mutex, uint32_t *data)
     return value;
 }
 
-atomic *atomic_create()
+atomic_t *atomic_create()
 {
-    atomic *_atomic = malloc(sizeof(struct _atomic));
-    if (_atomic == NULL)
+    atomic_t *atomic = malloc(sizeof(atomic_t));
+    if (atomic == NULL)
         return NULL;
 
-    pthread_cond_init(&_atomic->cond, NULL);
-    pthread_mutex_init(&_atomic->mutex, NULL);
-    pthread_mutex_init(&_atomic->mutex_counter, NULL);
-    _atomic->counter = 0;
+    pthread_cond_init(&atomic->cond, NULL);
+    pthread_mutex_init(&atomic->mutex, NULL);
+    pthread_mutex_init(&atomic->mutex_counter, NULL);
+    atomic->counter = 0;
 
-    return _atomic;
+    return atomic;
 }
 
-void atomic_destroy(atomic *_atomic)
+void atomic_destroy(atomic_t *atomic)
 {
-    pthread_cond_destroy(&_atomic->cond);
-    pthread_mutex_destroy(&_atomic->mutex);
-    pthread_mutex_destroy(&_atomic->mutex_counter);
-    free(_atomic);
+    pthread_cond_destroy(&atomic->cond);
+    pthread_mutex_destroy(&atomic->mutex);
+    pthread_mutex_destroy(&atomic->mutex_counter);
+    free(atomic);
 }
 
-void *atomic_non_blocking(atomic *_atomic, atomic_func *func, void *data)
+void *atomic_non_blocking(atomic_t *atomic, atomic_func *func, void *data)
 {
-    pthread_mutex_lock(&_atomic->mutex);
-    atomic_inc(&_atomic->mutex_counter, &_atomic->counter);
-    pthread_mutex_unlock(&_atomic->mutex);
+    pthread_mutex_lock(&atomic->mutex);
+    atomic_inc(&atomic->mutex_counter, &atomic->counter);
+    pthread_mutex_unlock(&atomic->mutex);
 
     void *ret = func(data);
 
-    atomic_dec(&_atomic->mutex_counter, &_atomic->counter);
-    pthread_cond_signal(&_atomic->cond);
+    atomic_dec(&atomic->mutex_counter, &atomic->counter);
+    pthread_cond_signal(&atomic->cond);
 
     return ret;
 }
 
-void *atomic_blocking(atomic *_atomic, atomic_func *func, void *data)
+void *atomic_blocking(atomic_t *atomic, atomic_func *func, void *data)
 {
-    pthread_mutex_lock(&_atomic->mutex);
+    pthread_mutex_lock(&atomic->mutex);
 
-    while (atomic_get(&_atomic->mutex_counter, &_atomic->counter) > 0)
-        pthread_cond_wait(&_atomic->cond, &_atomic->mutex);
+    while (atomic_get(&atomic->mutex_counter, &atomic->counter) > 0)
+        pthread_cond_wait(&atomic->cond, &atomic->mutex);
 
     void *ret = func(data);
 
-    pthread_mutex_unlock(&_atomic->mutex);
+    pthread_mutex_unlock(&atomic->mutex);
 
     return ret;
 }

@@ -6,7 +6,7 @@
 
 #include "avl_tree.h"
 
-typedef struct _atomic atomic;
+typedef struct atomic_t atomic_t;
 
 typedef void *(atomic_func)(void *);
 
@@ -18,12 +18,12 @@ void atomic_set(pthread_mutex_t *mutex, uint32_t *data, uint32_t value);
 
 uint32_t atomic_get(pthread_mutex_t *mutex, uint32_t *data);
 
-atomic *atomic_create();
+atomic_t *atomic_create();
 
-void atomic_destroy(atomic *_atomic);
+void atomic_destroy(atomic_t *atomic);
 
-void *atomic_non_blocking(atomic *_atomic, atomic_func *func, void *data);
+void *atomic_non_blocking(atomic_t *atomic, atomic_func *func, void *data);
 
-void *atomic_blocking(atomic *_atomic, atomic_func *func, void *data);
+void *atomic_blocking(atomic_t *atomic, atomic_func *func, void *data);
 
 #endif // __ATOMIC_H__

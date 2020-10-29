@@ -13,37 +13,34 @@
 
 #define HASH_MULTIPLIER 37
 
-typedef struct _query query;
-typedef struct _key key;
+typedef struct query_t query_t;
+typedef struct query_key_t query_key_t;
 
-struct _query
+struct query_t
 {
-    queue *keys;
-    tree *_tree;
+    queue_t *keys;
+    avl_tree_t *tree;
     uint32_t id;
     int fd;
     void *data;
-
-    void (*action)(query *_query, void *data);
-
+    void (*action)(query_t *query, void *data);
     bool blocking;
 };
 
-struct _key
+struct query_key_t
 {
     uint32_t id;
     char *name;
 };
 
-static tree *master = NULL;
+static avl_tree_t *master = NULL;
 
 void query_init()
 {
     if (master != NULL)
         return;
 
-    atomic *_atomic = atomic_create();
-    master = avl_create(_atomic);
+    master = avl_create(atomic_create());
 }
 
 static uint32_t hash_multiplication(const char *s)
@@ -57,7 +54,7 @@ static uint32_t hash_multiplication(const char *s)
     return h;
 }
 
-static void parse(char *query, queue **_queue, char **data)
+static void parse(char *query, queue_t **queue, char **data)
 {
     char *query_keys = strtok(query, ":");
     char *query_data = strtok(NULL, ":");
@@ -65,10 +62,10 @@ static void parse(char *query, queue **_queue, char **data)
     char *token = strtok(query_keys, "/");
     while ((token = strtok(NULL, "/")) != NULL)
     {
-        key *_key = malloc(sizeof(key));
+        query_key_t *_key = malloc(sizeof(query_key_t));
         _key->id = hash_multiplication(token);
         _key->name = token;
-        queue_push(*_queue, _key);
+        queue_push(*queue, _key);
     }
 
     if (query_data != NULL)
@@ -79,15 +76,15 @@ static void parse(char *query, queue **_queue, char **data)
     }
 }
 
-static void action_insert(query *_query, void *data)
+static void action_insert(query_t *query, void *data)
 {
     if (data == NULL)
     {
-        if (_query->data == NULL)
-            _query->data = avl_create(atomic_create());
+        if (query->data == NULL)
+            query->data = avl_create(atomic_create());
         // success
-        avl_insert(_query->_tree, _query->id, _query->data);
-        dprintf(_query->fd, "OK\n");
+        avl_insert(query->tree, query->id, query->data);
+        dprintf(query->fd, "OK\n");
     }
     else
     {
@@ -95,15 +92,15 @@ static void action_insert(query *_query, void *data)
     }
 }
 
-static void action_update(query *_query, void *data)
+static void action_update(query_t *query, void *data)
 {
     if (data != NULL)
     {
-        if (_query->data == NULL)
-            _query->data = avl_create(atomic_create());
+        if (query->data == NULL)
+            query->data = avl_create(atomic_create());
         // success
-        avl_update(_query->_tree, _query->id, _query->data);
-        dprintf(_query->fd, "OK\n");
+        avl_update(query->tree, query->id, query->data);
+        dprintf(query->fd, "OK\n");
     }
     else
     {
@@ -111,7 +108,7 @@ static void action_update(query *_query, void *data)
     }
 }
 
-static void action_delete(query *_query, void *data)
+static void action_delete(query_t *query, void *data)
 {
     if (data == NULL)
     {
@@ -124,18 +121,18 @@ static void action_delete(query *_query, void *data)
     else
     {
         // success
-        avl_delete(_query->_tree, _query->id);
-        dprintf(_query->fd, "OK\n");
+        avl_delete(query->tree, query->id);
+        dprintf(query->fd, "OK\n");
     }
 }
 
 #if 0
-static void action_delete_recursive(query *_query, void *data)
+static void action_delete_recursive(query_t *query, void *data)
 {
     if (data != NULL)
     {
         // success
-        avl_delete(_query->_tree, _query->id);
+        avl_delete(query->tree, query->id);
     }
     else
     {
@@ -144,7 +141,7 @@ static void action_delete_recursive(query *_query, void *data)
 }
 #endif
 
-static void action_find(query *_query, void *data)
+static void action_find(query_t *query, void *data)
 {
     if (data == NULL)
     {
@@ -156,22 +153,22 @@ static void action_find(query *_query, void *data)
     }
     else
     {
-        dprintf(_query->fd, "OK %s\n", (char *) data);
+        dprintf(query->fd, "OK %s\n", (char *) data);
         // success
     }
 }
 
 static void *query_loop(void *param)
 {
-    query *_query = param;
+    query_t *query = param;
 
-    if (_query->id > 0)
+    if (query->id > 0)
     {
-        void *data = avl_find(_query->_tree, _query->id);
+        void *data = avl_find(query->tree, query->id);
 
-        if (queue_size(_query->keys) == 0)
+        if (queue_size(query->keys) == 0)
         {
-            _query->action(_query, data);
+            query->action(query, data);
             return NULL;
         }
         else if (data == NULL)
@@ -185,17 +182,17 @@ static void *query_loop(void *param)
             return NULL;
         }
 
-        _query->_tree = data;
+        query->tree = data;
     }
 
-    key *_key = queue_pop(_query->keys);
+    query_key_t *_key = queue_pop(query->keys);
     if (_key != NULL)
     {
-        _query->id = _key->id;
-        if (_query->blocking && queue_size(_query->keys) == 0)
-            atomic_blocking(ptr_extra(_query->_tree), query_loop, _query);
+        query->id = _key->id;
+        if (query->blocking && queue_size(query->keys) == 0)
+            atomic_blocking(ptr_extra(query->tree), query_loop, query);
         else
-            atomic_non_blocking(ptr_extra(_query->_tree), query_loop, _query);
+            atomic_non_blocking(ptr_extra(query->tree), query_loop, query);
     }
 
     return NULL;
@@ -204,7 +201,7 @@ static void *query_loop(void *param)
 static const struct
 {
     char op;
-    query _query;
+    query_t query;
 } operation[] = {
         {'+', {.action = action_insert, .blocking = true}},
         {'*', {.action = action_update, .blocking = true}},
@@ -217,7 +214,7 @@ void query_execute(int fd, char *str)
     if (str == NULL || str[0] == '\0' || str[0] == '/' || str[1] != '/')
         return;
 
-    queue *keys = queue_create(NULL);
+    queue_t *keys = queue_create(NULL);
     char *data = NULL;
 
     parse(str, &keys, &data);
@@ -226,13 +223,13 @@ void query_execute(int fd, char *str)
     {
         if (operation[i].op == *str)
         {
-            query _q = operation[i]._query;
-            _q._tree = master;
-            _q.keys = keys;
-            _q.fd = fd;
-            _q.id = 0;
-            _q.data = data;
-            query_loop(&_q);
+            query_t query = operation[i].query;
+            query.tree = master;
+            query.keys = keys;
+            query.fd = fd;
+            query.id = 0;
+            query.data = data;
+            query_loop(&query);
             break;
         }
     }

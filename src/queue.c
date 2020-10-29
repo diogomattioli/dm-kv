@@ -4,76 +4,76 @@
 #include "queue.h"
 #include "pointer.h"
 
-typedef struct _node node;
+typedef struct queue_node_t queue_node_t;
 
-struct _node
+struct queue_node_t
 {
     void *data;
-    node *prev;
+    queue_node_t *prev;
 };
 
-struct _queue
+struct queue_t
 {
     size_t size;
-    node *front;
-    node *back;
+    queue_node_t *front;
+    queue_node_t *back;
 };
 
-size_t queue_size(queue *_queue)
+size_t queue_size(queue_t *queue)
 {
-    return _queue->size;
+    return queue->size;
 }
 
-void queue_push(queue *_queue, void *data)
+void queue_push(queue_t *queue, void *data)
 {
-    node *_node = malloc(sizeof(node));
-    _node->data = data;
-    _node->prev = NULL;
+    queue_node_t *node = malloc(sizeof(queue_node_t));
+    node->data = data;
+    node->prev = NULL;
 
-    if (_queue->front == NULL)
-        _queue->front = _node;
+    if (queue->front == NULL)
+        queue->front = node;
     else
-        _queue->back->prev = _node;
-    _queue->back = _node;
+        queue->back->prev = node;
+    queue->back = node;
 
-    _queue->size++;
+    queue->size++;
 }
 
-void *queue_pop(queue *_queue)
+void *queue_pop(queue_t *queue)
 {
-    node *_node = _queue->front;
-    if (_node == NULL)
+    queue_node_t *node = queue->front;
+    if (node == NULL)
         return NULL;
 
-    _queue->front = _node->prev;
-    if (_queue->front == NULL)
-        _queue->back = NULL;
+    queue->front = node->prev;
+    if (queue->front == NULL)
+        queue->back = NULL;
 
-    void *data = _node->data;
-    free(_node);
+    void *data = node->data;
+    free(node);
 
-    _queue->size--;
+    queue->size--;
 
     return data;
 }
 
-queue *queue_create(void *data)
+queue_t *queue_create(void *data)
 {
-    queue *_queue = ptr_malloc(sizeof(queue), PTR_QUEUE, data);
-    memset(_queue, 0, sizeof(queue));
-    return _queue;
+    queue_t *queue = ptr_malloc(sizeof(queue_t), PTR_QUEUE, data);
+    memset(queue, 0, sizeof(queue_t));
+    return queue;
 }
 
-void queue_destroy(queue *_queue)
+void queue_destroy(queue_t *queue)
 {
-    node *_node = _queue->front;
-    while (_node != NULL)
+    queue_node_t *node = queue->front;
+    while (node != NULL)
     {
-        node *temp = _node;
-        _node = _node->prev;
+        queue_node_t *temp = node;
+        node = node->prev;
 
         free(temp->data);
         free(temp);
     }
-    ptr_free(_queue);
+    ptr_free(queue);
 }

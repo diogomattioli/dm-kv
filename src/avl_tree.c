@@ -4,90 +4,90 @@
 #include "avl_tree.h"
 #include "pointer.h"
 
-typedef struct _tree tree;
-typedef struct _node node;
+typedef struct avl_tree_t avl_tree_t;
+typedef struct avl_node_t avl_node_t;
 
-struct _tree
+struct avl_tree_t
 {
-    node *root;
+    avl_node_t *root;
 };
 
-struct _node
+struct avl_node_t
 {
     uint32_t id;
     uint8_t height: 6; // height up to 64
 
-    node *left;
-    node *right;
+    avl_node_t *left;
+    avl_node_t *right;
 
     void *data;
 };
 
-static int height(node *_node)
+static int height(avl_node_t *node)
 {
-    if (_node->left != NULL && _node->right != NULL)
+    if (node->left != NULL && node->right != NULL)
     {
-        if (_node->left->height > _node->right->height)
-            return _node->left->height + 1;
+        if (node->left->height > node->right->height)
+            return node->left->height + 1;
         else
-            return _node->right->height + 1;
+            return node->right->height + 1;
     }
-    else if (_node->left != NULL)
-        return _node->left->height + 1;
-    else if (_node->right != NULL)
-        return _node->right->height + 1;
+    else if (node->left != NULL)
+        return node->left->height + 1;
+    else if (node->right != NULL)
+        return node->right->height + 1;
 
     return 1;
 }
 
-static int factor(node *_node)
+static int factor(avl_node_t *node)
 {
-    if (_node->left != NULL && _node->right != NULL)
-        return _node->left->height - _node->right->height;
-    else if (_node->left != NULL)
-        return _node->left->height;
-    else if (_node->right != NULL)
-        return _node->right->height * -1;
+    if (node->left != NULL && node->right != NULL)
+        return node->left->height - node->right->height;
+    else if (node->left != NULL)
+        return node->left->height;
+    else if (node->right != NULL)
+        return node->right->height * -1;
 
     return 1;
 }
 
-static node *rr_rotate(node *_node)
+static avl_node_t *rr_rotate(avl_node_t *node)
 {
-    node *temp = _node->right;
-    _node->right = temp->left;
-    temp->left = _node;
+    avl_node_t *temp = node->right;
+    node->right = temp->left;
+    temp->left = node;
 
-    _node->height = height(_node);
+    node->height = height(node);
     temp->height = height(temp);
 
     return temp;
 }
 
-static node *ll_rotate(node *_node)
+static avl_node_t *ll_rotate(avl_node_t *node)
 {
-    node *temp = _node->left;
-    _node->left = temp->right;
-    temp->right = _node;
+    avl_node_t *temp = node->left;
+    node->left = temp->right;
+    temp->right = node;
 
-    _node->height = height(_node);
+    node->height = height(node);
     temp->height = height(temp);
 
     return temp;
 }
 
-static node *lr_rotate(node *_node)
+static avl_node_t *lr_rotate(avl_node_t *node)
 {
-    node *temp = _node->left;
-    _node->left = rr_rotate(temp);
-    return ll_rotate(_node);
+    avl_node_t *temp = node->left;
+    node->left = rr_rotate(temp);
+    return ll_rotate(node);
 }
 
-static node *rl_rotate(node *_node)
+static avl_node_t *rl_rotate(avl_node_t *node)
 {
-    node *temp = _node->right;
-    _node->right = ll_rotate(temp);
-    return rr_rotate(_node);
+    avl_node_t *temp = node->right;
+    node->right = ll_rotate(temp);
+    return rr_rotate(node);
 }
 
 // factor +2   left +1  = LL
@@ -96,183 +96,183 @@ static node *rl_rotate(node *_node)
 // factor -2  right +1  = RL
 // factor -2  right  0  = RR
 // factor -2  right -1  = RR
-static node *balance(node *_node)
+static avl_node_t *balance(avl_node_t *node)
 {
-    int _factor = factor(_node);
+    int _factor = factor(node);
     if (_factor > 1) // +2
     {
-        _factor = factor(_node->left);
+        _factor = factor(node->left);
         if (_factor < 0) // -1
-            _node = lr_rotate(_node);
+            node = lr_rotate(node);
         else // +1 0
-            _node = ll_rotate(_node);
+            node = ll_rotate(node);
     }
     else if (_factor < -1) // -2
     {
-        _factor = factor(_node->right);
+        _factor = factor(node->right);
         if (_factor > 0) // +1
-            _node = rl_rotate(_node);
+            node = rl_rotate(node);
         else // -1 0
-            _node = rr_rotate(_node);
+            node = rr_rotate(node);
     }
 
-    return _node;
+    return node;
 }
 
-static node *insert(node *_node, uint32_t id, void *data)
+static avl_node_t *insert(avl_node_t *node, uint32_t id, void *data)
 {
-    if (_node == NULL)
+    if (node == NULL)
     {
-        _node = malloc(sizeof(node));
-        if (_node != NULL)
+        node = malloc(sizeof(avl_node_t));
+        if (node != NULL)
         {
-            memset(_node, 0, sizeof(node));
-            _node->id = id;
-            _node->height = 1;
-            _node->data = data;
+            memset(node, 0, sizeof(avl_node_t));
+            node->id = id;
+            node->height = 1;
+            node->data = data;
         }
-        return _node;
+        return node;
     }
-    else if (_node->id > id) // left
-        _node->left = insert(_node->left, id, data);
-    else if (_node->id < id) // right
-        _node->right = insert(_node->right, id, data);
+    else if (node->id > id) // left
+        node->left = insert(node->left, id, data);
+    else if (node->id < id) // right
+        node->right = insert(node->right, id, data);
     else // collision
     {
         // TODO
     }
 
-    _node->height = height(_node);
-    _node = balance(_node);
+    node->height = height(node);
+    node = balance(node);
 
-    return _node;
+    return node;
 }
 
-void avl_insert(tree *_tree, uint32_t id, void *data)
+void avl_insert(avl_tree_t *tree, uint32_t id, void *data)
 {
     if (data != NULL)
-        _tree->root = insert(_tree->root, id, data);
+        tree->root = insert(tree->root, id, data);
 }
 
-static void swap(node *_node, node *mvn)
+static void swap(avl_node_t *node, avl_node_t *mvn)
 {
-    node temp = *_node;
+    avl_node_t temp = *node;
 
-    _node->id = mvn->id;
-    _node->data = mvn->data;
+    node->id = mvn->id;
+    node->data = mvn->data;
     mvn->data = temp.data;
 }
 
-static void node_free(node *_node)
+static void node_free(avl_node_t *node)
 {
-    ptr_free(_node->data);
-    free(_node);
+    ptr_free(node->data);
+    free(node);
 }
 
-static void cascade(node *_node)
+static void cascade(avl_node_t *node)
 {
-    if (_node == NULL)
+    if (node == NULL)
         return;
 
-    cascade(_node->left);
-    cascade(_node->right);
+    cascade(node->left);
+    cascade(node->right);
 
-    node_free(_node);
+    node_free(node);
 }
 
-static node *delete(node *_node, uint32_t id)
+static avl_node_t *delete(avl_node_t *node, uint32_t id)
 {
-    if (_node == NULL)
+    if (node == NULL)
         return NULL;
-    else if (_node->id > id) // left
-        _node->left = delete(_node->left, id);
-    else if (_node->id < id) // right
-        _node->right = delete(_node->right, id);
+    else if (node->id > id) // left
+        node->left = delete(node->left, id);
+    else if (node->id < id) // right
+        node->right = delete(node->right, id);
     else // found
     {
-        if (_node->left != NULL)
+        if (node->left != NULL)
         {
-            node *mvn = _node->left;
+            avl_node_t *mvn = node->left;
             while (mvn->right != NULL)
                 mvn = mvn->right;
 
-            swap(_node, mvn);
-            _node->left = delete(_node->left, mvn->id);
+            swap(node, mvn);
+            node->left = delete(node->left, mvn->id);
         }
-        else if (_node->right != NULL)
+        else if (node->right != NULL)
         {
-            node *mvn = _node->right;
+            avl_node_t *mvn = node->right;
             while (mvn->left != NULL)
                 mvn = mvn->left;
 
-            swap(_node, mvn);
-            _node->right = delete(_node->right, mvn->id);
+            swap(node, mvn);
+            node->right = delete(node->right, mvn->id);
         }
         else
         {
-            node_free(_node);
+            node_free(node);
             return NULL;
         }
     }
 
-    _node->height = height(_node);
-    _node = balance(_node);
+    node->height = height(node);
+    node = balance(node);
 
-    return _node;
+    return node;
 }
 
-void avl_delete(tree *_tree, uint32_t id)
+void avl_delete(avl_tree_t *tree, uint32_t id)
 {
-    _tree->root = delete(_tree->root, id);
+    tree->root = delete(tree->root, id);
 }
 
-static node *find(node *_node, uint32_t id)
+static avl_node_t *find(avl_node_t *node, uint32_t id)
 {
-    while (_node != NULL)
+    while (node != NULL)
     {
-        if (_node->id > id) // left
-            _node = _node->left;
-        else if (_node->id < id) // right
-            _node = _node->right;
+        if (node->id > id) // left
+            node = node->left;
+        else if (node->id < id) // right
+            node = node->right;
         else // found
-            return _node;
+            return node;
     }
 
     return NULL;
 }
 
-void *avl_find(tree *_tree, uint32_t id)
+void *avl_find(avl_tree_t *tree, uint32_t id)
 {
-    node *_node = find(_tree->root, id);
-    return _node != NULL ? _node->data : NULL;
+    avl_node_t *node = find(tree->root, id);
+    return node != NULL ? node->data : NULL;
 }
 
-void avl_update(tree *_tree, uint32_t id, void *data)
+void avl_update(avl_tree_t *tree, uint32_t id, void *data)
 {
     if (data == NULL)
         return;
 
-    node *_node = find(_tree->root, id);
-    if (_node != NULL)
+    avl_node_t *node = find(tree->root, id);
+    if (node != NULL)
     {
-        ptr_free(_node->data);
-        _node->data = data;
+        ptr_free(node->data);
+        node->data = data;
     }
 }
 
-tree *avl_create(void *data)
+avl_tree_t *avl_create(void *data)
 {
-    tree *_tree = ptr_malloc(sizeof(tree), PTR_TREE, data);
-    if (_tree == NULL)
+    avl_tree_t *tree = ptr_malloc(sizeof(avl_tree_t), PTR_TREE, data);
+    if (tree == NULL)
         return NULL;
 
-    memset(_tree, 0, sizeof(tree));
+    memset(tree, 0, sizeof(avl_tree_t));
 
-    return _tree;
+    return tree;
 }
 
-void avl_destroy(tree *_tree)
+void avl_destroy(avl_tree_t *tree)
 {
-    cascade(_tree->root);
-    ptr_free(_tree);
+    cascade(tree->root);
+    ptr_free(tree);
 }

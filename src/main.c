@@ -21,7 +21,7 @@ uint64_t diffts(struct timespec ts, struct timespec ts2)
 }
 #endif
 
-struct _thread
+struct thread_t
 {
     int socket;
     struct sockaddr_in addr;
@@ -32,7 +32,7 @@ struct _thread
 
 void *thread_func(void *arg)
 {
-    struct _thread *thread = arg;
+    struct thread_t *thread = arg;
 
     char buf[1000 + 1];
     size_t len = 0;
@@ -110,10 +110,10 @@ int main(int argc, char **argv)
 
     difftotal = 0;
     for (int i = 0; i < ENTRIES; i++) {
-        snprintf(qu, sizeof(qu), "+/%d\n%d", i, i);
+        snprintf(qu, sizeof(qu), "+/%d:%d", i, i);
 
         clock_gettime(CLOCK_REALTIME, &ts);
-        query_execute(-1, qu);
+        query_execute(2, qu);
         clock_gettime(CLOCK_REALTIME, &ts2);
 
         diff = diffts(ts, ts2);
@@ -124,10 +124,10 @@ int main(int argc, char **argv)
 
     difftotal = 0;
     for (int i = 0; i < ENTRIES; i++) {
-        snprintf(qu, sizeof(qu), "./%d\n%d", i, i);
+        snprintf(qu, sizeof(qu), "./%d", i);
 
         clock_gettime(CLOCK_REALTIME, &ts);
-        query_execute(0, qu);
+        query_execute(2, qu);
         clock_gettime(CLOCK_REALTIME, &ts2);
 
         diff = diffts(ts, ts2);
@@ -138,10 +138,10 @@ int main(int argc, char **argv)
 
     difftotal = 0;
     for (int i = 0; i < ENTRIES; i++) {
-        snprintf(qu, sizeof(qu), "-/%d\n%d", i, i);
+        snprintf(qu, sizeof(qu), "-/%d", i);
 
         clock_gettime(CLOCK_REALTIME, &ts);
-        query_execute(-1, qu);
+        query_execute(2, qu);
         clock_gettime(CLOCK_REALTIME, &ts2);
 
         diff = diffts(ts, ts2);
@@ -171,8 +171,8 @@ int main(int argc, char **argv)
 
     while ((client_socket = accept(server_socket, (struct sockaddr *) &client_addr, (socklen_t *) &addr_len)) != -1)
     {
-        struct _thread *thread = malloc(sizeof(struct _thread));
-        memset(thread, 0, sizeof(struct _thread));
+        struct thread_t *thread = malloc(sizeof(struct thread_t));
+        memset(thread, 0, sizeof(struct thread_t));
         thread->socket = client_socket;
         memcpy(&thread->addr, &client_addr, addr_len);
         pthread_create(&thread->id, NULL, thread_func, thread);

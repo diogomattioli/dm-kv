@@ -4,7 +4,6 @@
 #include "avl_tree.h"
 #include "pointer.h"
 
-typedef struct avl_tree_t avl_tree_t;
 typedef struct avl_node_t avl_node_t;
 
 struct avl_tree_t

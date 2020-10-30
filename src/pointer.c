@@ -51,10 +51,6 @@ void ptr_free(void *ptr)
     uint8_t *ptr8 = (uint8_t *) ptr;
     ptr8--;
 
-    void (*destroy)(void *) = NULL;
-    if (destroy)
-        destroy(ptr);
-
     void *extra = ptr_extra(ptr);
     if (extra)
     {

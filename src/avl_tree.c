@@ -164,7 +164,10 @@ static void swap(avl_node_t *node, avl_node_t *mvn)
 
 static void node_free(avl_node_t *node)
 {
-    ptr_free(node->data);
+    if (ptr_type(node->data) == PTR_TREE)
+        avl_destroy(node->data);
+    else
+        ptr_free(node->data);
     free(node);
 }
 

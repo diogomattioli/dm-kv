@@ -12,15 +12,6 @@
 
 #include "query.h"
 
-#if 0
-uint64_t diffts(struct timespec ts, struct timespec ts2)
-{
-    uint64_t t = (ts2.tv_sec - ts.tv_sec) * 1000000000;
-    t += (ts2.tv_nsec - ts.tv_nsec);
-    return t;
-}
-#endif
-
 struct thread_t
 {
     int socket;
@@ -64,94 +55,6 @@ int main(int argc, char **argv)
     size_t addr_len = sizeof(struct sockaddr_in);
 
     query_init();
-
-#if 0
-    char queries[][100] = {
-            "+/22:doing it",
-            "./22",
-            "-/22",
-            "./node/",
-            "+/node/subnode:testing",
-            "./node/subnode",
-            "-/node/",
-            "+/node",
-            "+/node/subnode",
-            "+/node/subnode/subsubnode:some text here",
-            "./node/subnode/subsubnode",
-    };
-
-    for (int i = 0; i < sizeof(queries) / sizeof(queries[0]); i++)
-    {
-        printf("%d - %s\n", i, queries[i]);
-
-        struct timespec ts;
-        clock_gettime(CLOCK_REALTIME, &ts);
-
-        query_execute(1, queries[i]);
-
-        struct timespec ts2;
-        clock_gettime(CLOCK_REALTIME, &ts2);
-
-        uint64_t diff = diffts(ts, ts2);
-
-        printf("%6luns\n", diff);
-    }
-#endif
-
-#if 0
-#define ENTRIES 1000000
-
-    char qu[100] = {0};
-
-    struct timespec ts;
-    struct timespec ts2;
-    uint64_t diff = 0;
-    uint64_t difftotal = 0;
-
-    difftotal = 0;
-    for (int i = 0; i < ENTRIES; i++) {
-        snprintf(qu, sizeof(qu), "+/%d:%d", i, i);
-
-        clock_gettime(CLOCK_REALTIME, &ts);
-        query_execute(2, qu);
-        clock_gettime(CLOCK_REALTIME, &ts2);
-
-        diff = diffts(ts, ts2);
-        difftotal += diff;
-    }
-
-    printf("INSERT average %6luns\n", difftotal / ENTRIES);
-
-    difftotal = 0;
-    for (int i = 0; i < ENTRIES; i++) {
-        snprintf(qu, sizeof(qu), "./%d", i);
-
-        clock_gettime(CLOCK_REALTIME, &ts);
-        query_execute(2, qu);
-        clock_gettime(CLOCK_REALTIME, &ts2);
-
-        diff = diffts(ts, ts2);
-        difftotal += diff;
-    }
-
-    printf("FIND average %6luns\n", difftotal / ENTRIES);
-
-    difftotal = 0;
-    for (int i = 0; i < ENTRIES; i++) {
-        snprintf(qu, sizeof(qu), "-/%d", i);
-
-        clock_gettime(CLOCK_REALTIME, &ts);
-        query_execute(2, qu);
-        clock_gettime(CLOCK_REALTIME, &ts2);
-
-        diff = diffts(ts, ts2);
-        difftotal += diff;
-    }
-
-    printf("DELETE average %6luns\n", difftotal / ENTRIES);
-
-    return 0;
-#endif
 
     if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         exit(1);

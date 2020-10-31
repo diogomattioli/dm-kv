@@ -19,7 +19,7 @@ struct thread_t
     pthread_t id;
 };
 
-#define MAX_CONNECTIONS (10)
+#define LISTEN_QUEUE_MAX (1024)
 
 void *thread_func(void *arg)
 {
@@ -50,34 +50,60 @@ int main(int argc, char **argv)
 {
     printf("%s-%s\n", GIT_BRANCH, GIT_REVISION);
 
-    int server_socket, client_socket;
-    struct sockaddr_in server_addr, client_addr;
-    size_t addr_len = sizeof(struct sockaddr_in);
+    uint16_t port = 4321;
+
+    for (int i = 1; i < argc; i++)
+    {
+        if (strlen(argv[i]) < 3)
+            continue;
+
+        uint16_t value = (uint16_t) atoi(&argv[i][2]);
+        if (value == 0)
+            continue;
+
+        switch (argv[i][1])
+        {
+            case 'p':
+                port = value;
+                break;
+            case 'm':
+            {
+                struct rlimit rl;
+                rl.rlim_cur = rl.rlim_max = value * 1024 * 1024;
+                setrlimit(RLIMIT_AS, &rl);
+                break;
+            }
+        }
+    }
 
     query_init();
 
-    if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+    int socket_server, socket_client;
+    struct sockaddr_in addr_server, addr_client;
+    size_t addr_len = sizeof(struct sockaddr_in);
+
+    if ((socket_server = socket(AF_INET, SOCK_STREAM, 0)) == -1)
         exit(1);
 
     int optval = 1;
-    setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
+    setsockopt(socket_server, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
 
-    memset(&server_addr, 0, sizeof(struct sockaddr_in));
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(4321);
-    if (bind(server_socket, (struct sockaddr *) &server_addr, addr_len) == -1)
+    memset(&addr_server, 0, sizeof(struct sockaddr_in));
+    addr_server.sin_addr.s_addr = INADDR_ANY;
+    addr_server.sin_family = AF_INET;
+    addr_server.sin_port = htons(port);
+    if (bind(socket_server, (struct sockaddr *) &addr_server, addr_len) == -1)
         exit(1);
 
-    if (listen(server_socket, MAX_CONNECTIONS) == -1)
+    if (listen(socket_server, LISTEN_QUEUE_MAX) == -1)
         exit(1);
 
-    while ((client_socket = accept(server_socket, (struct sockaddr *) &client_addr, (socklen_t *) &addr_len)) != -1)
+    while ((socket_client = accept(socket_server, (struct sockaddr *) &addr_client, (socklen_t *) &addr_len)) != -1)
     {
         struct thread_t *thread = malloc(sizeof(struct thread_t));
         memset(thread, 0, sizeof(struct thread_t));
-        thread->socket = client_socket;
-        memcpy(&thread->addr, &client_addr, addr_len);
+        thread->socket = socket_client;
+        memcpy(&thread->addr, &addr_client, addr_len);
         pthread_create(&thread->id, NULL, thread_func, thread);
     }
 

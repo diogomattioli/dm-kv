@@ -60,6 +60,9 @@ void *queue_pop(queue_t *queue)
 queue_t *queue_create(void *data)
 {
     queue_t *queue = ptr_malloc(sizeof(queue_t), PTR_QUEUE, data);
+    if (queue == NULL)
+        return NULL;
+
     memset(queue, 0, sizeof(queue_t));
     return queue;
 }

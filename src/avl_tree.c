@@ -275,6 +275,9 @@ avl_tree_t *avl_create(void *data)
 
 void avl_destroy(avl_tree_t *tree)
 {
+    if (tree == NULL)
+        return;
+
     cascade(tree->root);
     ptr_free(tree);
 }

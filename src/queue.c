@@ -69,6 +69,9 @@ queue_t *queue_create(void *data)
 
 void queue_destroy(queue_t *queue)
 {
+    if (queue == NULL)
+        return;
+
     queue_node_t *node = queue->front;
     while (node != NULL)
     {

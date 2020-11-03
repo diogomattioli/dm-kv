@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include <stdint.h>
 
 #include "pointer.h"
 #include "avl_tree.h"
@@ -10,8 +9,8 @@
 #include "atomic.h"
 
 #include "query.h"
-
-#define HASH_MULTIPLIER 37
+#include "hash.h"
+#include "json.h"
 
 typedef struct query_t query_t;
 typedef struct query_key_t query_key_t;
@@ -43,21 +42,10 @@ void query_init()
     master = avl_create(atomic_create());
 }
 
-static uint32_t hash_multiplication(const char *s)
-{
-    uint32_t h = 0;
-    uint8_t *c = (uint8_t *) s;
-
-    while (*c != '\0')
-        h = h * HASH_MULTIPLIER + *c++;
-
-    return h;
-}
-
-static void parse(char *query, queue_t **queue, char **data)
+static void parse(char *query, queue_t **queue, void **data)
 {
     char *query_keys = strtok(query, ":");
-    char *query_data = strtok(NULL, ":");
+    char *query_data = strtok(NULL, "\0");
 
     char *token = strtok(query_keys, "/");
     while ((token = strtok(NULL, "/")) != NULL)
@@ -69,11 +57,7 @@ static void parse(char *query, queue_t **queue, char **data)
     }
 
     if (query_data != NULL)
-    {
-        size_t len = strlen(query_data) + 1;
-        *data = ptr_malloc(len, PTR_STRING, NULL);
-        memcpy(*data, query_data, len);
-    }
+        *data = json_deserialize(&query_data);
 }
 
 static void action_insert(query_t *query, void *data)
@@ -153,8 +137,22 @@ static void action_find(query_t *query, void *data)
     }
     else
     {
-        dprintf(query->fd, "OK %s\n", (char *) data);
         // success
+        switch (ptr_type(data))
+        {
+            case PTR_NULL:
+                dprintf(query->fd, "OK null\n");
+                break;
+            case PTR_TRUE:
+                dprintf(query->fd, "OK true\n");
+                break;
+            case PTR_FALSE:
+                dprintf(query->fd, "OK false\n");
+                break;
+            default:
+                dprintf(query->fd, "OK %s\n", (char *) data);
+                break;
+        }
     }
 }
 
@@ -215,7 +213,7 @@ void query_execute(int fd, char *str)
         return;
 
     queue_t *keys = queue_create(NULL);
-    char *data = NULL;
+    void *data = NULL;
 
     parse(str, &keys, &data);
 

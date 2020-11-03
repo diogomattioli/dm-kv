@@ -7,6 +7,11 @@ enum
     PTR_TREE,
     PTR_QUEUE,
     PTR_STRING,
+
+    PTR_NUMBER,
+    PTR_TRUE,
+    PTR_FALSE,
+    PTR_NULL,
 };
 
 void *ptr_malloc(size_t size, int type, void *extra);

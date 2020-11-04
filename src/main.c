@@ -98,13 +98,18 @@ int main(int argc, char **argv)
     if (listen(socket_server, LISTEN_QUEUE_MAX) == -1)
         exit(1);
 
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+    pthread_attr_setstacksize(&attr, 65536);
+
     while ((socket_client = accept(socket_server, (struct sockaddr *) &addr_client, (socklen_t *) &addr_len)) != -1)
     {
         struct thread_t *thread = malloc(sizeof(struct thread_t));
         memset(thread, 0, sizeof(struct thread_t));
         thread->socket = socket_client;
         memcpy(&thread->addr, &addr_client, addr_len);
-        pthread_create(&thread->id, NULL, thread_func, thread);
+        pthread_create(&thread->id, &attr, thread_func, thread);
     }
 
     return 0;

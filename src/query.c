@@ -217,7 +217,7 @@ void query_execute(int fd, char *str)
 
     parse(str, &keys, &data);
 
-    for (int i = 0; i < sizeof(operation) / sizeof(operation[0]); i++)
+    for (size_t i = 0; i < sizeof(operation) / sizeof(operation[0]); i++)
     {
         if (operation[i].op == *str)
         {

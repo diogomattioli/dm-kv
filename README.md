@@ -15,10 +15,14 @@ It has a concurrent multi-level key-value support, allowing users to query the d
 3 - Dynamic support
 
 
-## Installation
+## Install
 
-`git clone`
+`git clone https://github.com/diogomattioli/dm-kv.git`
+
+`cd dm-kv`
+
 `cmake .`
+
 `make`
 
 

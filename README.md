@@ -17,7 +17,9 @@ It has a concurrent multi-level key-value support, allowing users to query the d
 
 ## Installation
 
-`git clone` and `make`
+`git clone`
+`cmake .`
+`make`
 
 
 ## Value format

@@ -130,7 +130,7 @@ TEST(object)
 TEST(integration)
 {
     char *in = "{'a': 1, 'b': 'test', 'c': true, 'd': false, 'e': null, 'f': [1,2], 'g': {'ga': 'gtest'}}";
-    avl_tree_t *out = deserialize_object(&in);
+    avl_tree_t *out = json_deserialize(&in);
 
     const int key_a = hash_multiplication("a");
     const int key_b = hash_multiplication("b");

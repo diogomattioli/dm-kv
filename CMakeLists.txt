@@ -15,7 +15,7 @@ string(STRIP "${GIT_TAG}" GIT_TAG)
 
 add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
 add_definitions(-DGIT_REVISION="${GIT_REVISION}")
-add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
+add_definitions(-DGIT_TAG="${GIT_TAG}")
 
 
 set(CMAKE_C_STANDARD 11)

@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.16)
 project(rpc CXX)
 
 
@@ -23,6 +22,7 @@ foreach(proto ${protos})
 endforeach()
 
 
+include_directories("../src")
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 file(GLOB srcs "*.cpp")

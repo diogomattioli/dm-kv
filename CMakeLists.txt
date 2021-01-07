@@ -23,13 +23,19 @@ set(CMAKE_C_FLAGS "-Wall -Wextra -Wpedantic -Werror")
 set(CMAKE_C_FLAGS_DEBUG "-g3")
 set(CMAKE_C_FLAGS_RELEASE "-O3")
 
-include_directories(src)
-link_libraries(pthread)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Werror")
+set(CMAKE_CXX_FLAGS_DEBUG "-g3")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
+
+include_directories(src rpc)
 
 file(GLOB SOURCES "src/*.c")
 add_executable(dm-kv ${SOURCES})
+target_link_libraries(dm-kv pthread rpc)
 
+add_subdirectory(rpc)
 
 if(BUILD_TESTS)
     enable_testing()

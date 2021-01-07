@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package dm_kv;
+
+service Query {
+  rpc Insert(QueryRequest) returns (QueryResponse) {}
+  rpc Update(QueryRequest) returns (QueryResponse) {}
+  rpc Delete(QueryRequest) returns (QueryResponse) {}
+  rpc Retrieve(QueryRequest) returns (QueryResponse) {}
+}
+
+message QueryRequest {
+  string path = 1;
+  bool recursive = 2;
+  bytes data = 3;
+}
+
+message QueryResponse {
+  bool success = 1;
+  int32 reason = 2;
+  string message = 3;
+  bytes data = 4;
+}

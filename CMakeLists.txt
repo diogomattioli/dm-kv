@@ -38,30 +38,6 @@ target_link_libraries(dm-kv pthread rpc)
 add_subdirectory(rpc)
 
 if(BUILD_TESTS)
-    enable_testing()
-    file(GLOB TESTS "tests/test_*.c")
-    foreach(TEST ${TESTS})
-        get_filename_component(TESTNAME ${TEST} NAME_WLE)
-        get_filename_component(TESTFILE ${TEST} NAME)
-
-        file(GLOB SOURCES "src/*.c")
-        string(SUBSTRING ${TESTFILE} 5 -1 SRC_FILE)
-        list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/${SRC_FILE})
-        list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c)
-
-        add_executable(${TESTNAME} tests/${TESTFILE} ${SOURCES})
-
-        file(READ ${TEST} TEST_CONTENTS)
-        STRING(REGEX REPLACE "\n" ";" TEST_CONTENTS "${TEST_CONTENTS}")
-
-        set(COUNTER 0)
-        foreach(TEST_LINE ${TEST_CONTENTS})
-            string(REGEX MATCH "TEST[(]([A-Za-z0-9_]+)[)]" TEST_CASES ${TEST_LINE})
-            if(${CMAKE_MATCH_COUNT} EQUAL 1)
-                add_test(NAME ${TESTNAME}_${CMAKE_MATCH_1} COMMAND ${TESTNAME} ${COUNTER})
-                MATH(EXPR COUNTER "${COUNTER}+1")
-            endif()
-        endforeach()
-    endforeach()
+    add_subdirectory(tests)
 endif()
 

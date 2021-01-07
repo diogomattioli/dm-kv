@@ -29,15 +29,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g3")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 
-include_directories(src rpc)
-
-file(GLOB SOURCES "src/*.c")
-add_executable(dm-kv ${SOURCES})
-target_link_libraries(dm-kv pthread rpc)
-
 add_subdirectory(rpc)
-
+add_subdirectory(src)
 if(BUILD_TESTS)
     add_subdirectory(tests)
 endif()
-

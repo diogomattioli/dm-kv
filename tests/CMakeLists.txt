@@ -1,5 +1,7 @@
 enable_testing()
 
+include_directories("../src")
+
 file(GLOB srcs "../src/*.c")
 list(REMOVE_ITEM srcs ${CMAKE_CURRENT_SOURCE_DIR}/../src/main.c)
 

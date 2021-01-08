@@ -10,6 +10,8 @@ foreach(test ${tests})
     get_filename_component(test_name ${test} NAME_WLE)
     get_filename_component(test_file ${test} NAME)
 
+    string(SUBSTRING ${test_name} 5 -1 unit_name)
+
     file(READ ${test} test_contents)
     string(REGEX REPLACE "\n" ";" test_contents ${test_contents})
 
@@ -17,7 +19,7 @@ foreach(test ${tests})
     foreach(test_line ${test_contents})
         string(REGEX MATCH "TEST[(]([A-Za-z0-9_]+)[)]" test_cases ${test_line})
         if(${CMAKE_MATCH_COUNT} EQUAL 1)
-            add_test(NAME ${test_name}_${CMAKE_MATCH_1} COMMAND ${test_name} ${counter})
+            add_test(NAME ${unit_name}.${CMAKE_MATCH_1} COMMAND ${test_name} ${counter})
             math(EXPR counter "${counter}+1")
         endif()
     endforeach()

@@ -22,7 +22,7 @@ foreach(proto ${protos})
 endforeach()
 
 
-include_directories("../src")
+include_directories("..")
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 file(GLOB srcs "*.cpp")
